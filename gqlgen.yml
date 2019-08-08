@@ -1,0 +1,32 @@
+# .gqlgen.yml example
+#
+# Refer to https://gqlgen.com/config/
+# for detailed .gqlgen.yml documentation.
+
+schema:
+- schema.graphql
+exec:
+  filename: generated.go
+model:
+  filename: models_gen.go
+models:
+  Metadata:
+    model: k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta
+  ServiceSpec:
+    model: github.com/julz/kngraphql/model.ServiceSpec
+  RevisionTemplateSpec:
+    model: github.com/julz/kngraphql/model.RevisionTemplateSpec
+  Template:
+    model: knative.dev/serving/pkg/apis/serving/v1beta1.RevisionSpec
+  TrafficTarget:
+    model: knative.dev/serving/pkg/apis/serving/v1beta1.TrafficTarget
+  RevisionSpec:
+    model: knative.dev/serving/pkg/apis/serving/v1beta1.RevisionSpec
+  Container:
+    model: 	k8s.io/api/core/v1.Container
+  Service:
+    model: github.com/julz/kngraphql/model.Service
+resolver:
+  filename: resolver.go
+  type: Resolver
+autobind: []

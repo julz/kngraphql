@@ -1,0 +1,45 @@
+type Metadata {
+  name: String!
+  namespace: String!
+}
+
+type RevisionSpec {
+  containers: [Container!]!
+  serviceAccountName: String
+}
+
+type RouteSpec {
+  traffic: [TrafficTarget!]!
+}
+
+type TrafficTarget {
+  tag: String
+  percent: Int
+  latestRevision: Boolean
+}
+
+type RevisionTemplateSpec {
+  metadata: Metadata
+  spec: RevisionSpec
+}
+
+type ServiceSpec {
+  template: RevisionTemplateSpec
+  traffic: [TrafficTarget!]
+}
+
+type Service {
+  metadata: Metadata!
+  spec: ServiceSpec
+}
+
+type Container {
+  name: String
+  args: [String!]
+  command: [String!]
+  image: String!
+}
+
+type Query {
+  services(namespace: String!): [Service!]!
+}
