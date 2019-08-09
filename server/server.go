@@ -9,6 +9,7 @@ import (
 	"github.com/99designs/gqlgen/handler"
 	"github.com/julz/kngraphql"
 	"github.com/julz/kngraphql/resolver"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"knative.dev/serving/pkg/client/clientset/versioned"
 )
@@ -21,12 +22,7 @@ func main() {
 		port = defaultPort
 	}
 
-	config, err := clientcmd.BuildConfigFromFlags("", filepath.Join(os.Getenv("HOME"), ".kube", "config"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	clientset := versioned.NewForConfigOrDie(config)
+	clientset := versioned.NewForConfigOrDie(MustGetConfig())
 	resolver := resolver.NewResolver(clientset)
 
 	http.Handle("/", handler.Playground("GraphQL playground", "/query"))
@@ -34,4 +30,17 @@ func main() {
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+
+func MustGetConfig() *rest.Config {
+	if config, err := rest.InClusterConfig(); err == nil {
+		return config
+	}
+
+	config, err := clientcmd.BuildConfigFromFlags("", filepath.Join(os.Getenv("HOME"), ".kube", "config"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return config
 }

@@ -1,0 +1,10 @@
+apiVersion: serving.knative.dev/v1alpha1 # Current version of Knative
+kind: Service
+metadata:
+  name: kngraphql
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+        - image: github.com/julz/kngraphql/server
