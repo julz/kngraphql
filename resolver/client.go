@@ -36,3 +36,14 @@ func (r *Resolver) Services(ctx context.Context, namespace string) (result []*mo
 
 	return result, nil
 }
+
+func (r *Resolver) ServiceByName(ctx context.Context, namespace string, name string) (*model.Service, error) {
+	s, err := r.client.ServingV1beta1().Services(namespace).Get(name, v1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("get: %s", err)
+	}
+
+	return &model.Service{
+		Service: *s,
+	}, nil
+}

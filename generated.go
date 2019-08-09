@@ -59,7 +59,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Services func(childComplexity int, namespace string) int
+		ServiceByName func(childComplexity int, namespace string, name string) int
+		Services      func(childComplexity int, namespace string) int
 	}
 
 	RevisionSpec struct {
@@ -99,6 +100,7 @@ type ComplexityRoot struct {
 
 type QueryResolver interface {
 	Services(ctx context.Context, namespace string) ([]*model.Service, error)
+	ServiceByName(ctx context.Context, namespace string, name string) (*model.Service, error)
 }
 
 type executableSchema struct {
@@ -164,6 +166,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Metadata.Namespace(childComplexity), true
+
+	case "Query.serviceByName":
+		if e.complexity.Query.ServiceByName == nil {
+			break
+		}
+
+		args, err := ec.field_Query_serviceByName_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ServiceByName(childComplexity, args["namespace"].(string), args["name"].(string)), true
 
 	case "Query.services":
 		if e.complexity.Query.Services == nil {
@@ -387,6 +401,7 @@ type Container {
 
 type Query {
   services(namespace: String! = "default"): [Service!]!
+  serviceByName(namespace: String! = "default", name: String!): Service
 }
 
 scalar StringMap
@@ -408,6 +423,28 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_serviceByName_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["namespace"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["namespace"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["name"]; ok {
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg1
 	return args, nil
 }
 
@@ -750,6 +787,47 @@ func (ec *executionContext) _Query_services(ctx context.Context, field graphql.C
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNService2ᚕᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐService(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_serviceByName(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_serviceByName_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ServiceByName(rctx, args["namespace"].(string), args["name"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Service)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOService2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐService(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2635,6 +2713,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "serviceByName":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_serviceByName(ctx, field)
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -3562,6 +3651,17 @@ func (ec *executionContext) marshalORevisionTemplateSpec2ᚖgithubᚗcomᚋjulz�
 		return graphql.Null
 	}
 	return ec._RevisionTemplateSpec(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOService2githubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐService(ctx context.Context, sel ast.SelectionSet, v model.Service) graphql.Marshaler {
+	return ec._Service(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOService2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐService(ctx context.Context, sel ast.SelectionSet, v *model.Service) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Service(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOServiceSpec2githubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐServiceSpec(ctx context.Context, sel ast.SelectionSet, v model.ServiceSpec) graphql.Marshaler {

@@ -19,3 +19,6 @@ type queryResolver struct{ *Resolver }
 func (r *queryResolver) Services(ctx context.Context, namespace string) ([]*model.Service, error) {
 	panic("not implemented")
 }
+func (r *queryResolver) ServiceByName(ctx context.Context, namespace string, name string) (*model.Service, error) {
+	panic("not implemented")
+}
