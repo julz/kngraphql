@@ -21,11 +21,13 @@ models:
   TrafficTarget:
     model: knative.dev/serving/pkg/apis/serving/v1beta1.TrafficTarget
   RevisionSpec:
-    model: knative.dev/serving/pkg/apis/serving/v1beta1.RevisionSpec
+    model: github.com/julz/kngraphql/model.RevisionSpec
   Container:
     model: 	k8s.io/api/core/v1.Container
   Service:
     model: github.com/julz/kngraphql/model.Service
+  StringMap:
+    model: github.com/julz/kngraphql/model.StringMap
 resolver:
   filename: resolver.go
   type: Resolver

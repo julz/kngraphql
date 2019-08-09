@@ -35,10 +35,15 @@ func (s *RevisionTemplateSpec) Metadata() metav1.ObjectMeta {
 	return s.RevisionTemplateSpec.ObjectMeta
 }
 
-func (s *RevisionTemplateSpec) Spec() v1beta1.RevisionSpec {
-	return s.RevisionTemplateSpec.Spec
+func (s *RevisionTemplateSpec) Spec() *RevisionSpec {
+	return &RevisionSpec{RevisionSpec: s.RevisionTemplateSpec.Spec}
 }
 
 type RevisionSpec struct {
 	v1beta1.RevisionSpec
+}
+
+func (r *RevisionSpec) ContainerConcurrency() *int {
+	c := int(r.RevisionSpec.ContainerConcurrency)
+	return &c
 }

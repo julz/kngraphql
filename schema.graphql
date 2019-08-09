@@ -1,11 +1,14 @@
 type Metadata {
   name: String!
   namespace: String!
+  annotations: StringMap
 }
 
 type RevisionSpec {
   containers: [Container!]!
   serviceAccountName: String
+  containerConcurrency: Int
+  timeoutSeconds: Int
 }
 
 type RouteSpec {
@@ -15,6 +18,8 @@ type RouteSpec {
 type TrafficTarget {
   tag: String
   percent: Int
+  revisionName: String
+  configurationName: String
   latestRevision: Boolean
 }
 
@@ -43,3 +48,5 @@ type Container {
 type Query {
   services(namespace: String!): [Service!]!
 }
+
+scalar StringMap

@@ -53,8 +53,9 @@ type ComplexityRoot struct {
 	}
 
 	Metadata struct {
-		Name      func(childComplexity int) int
-		Namespace func(childComplexity int) int
+		Annotations func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Namespace   func(childComplexity int) int
 	}
 
 	Query struct {
@@ -62,8 +63,10 @@ type ComplexityRoot struct {
 	}
 
 	RevisionSpec struct {
-		Containers         func(childComplexity int) int
-		ServiceAccountName func(childComplexity int) int
+		ContainerConcurrency func(childComplexity int) int
+		Containers           func(childComplexity int) int
+		ServiceAccountName   func(childComplexity int) int
+		TimeoutSeconds       func(childComplexity int) int
 	}
 
 	RevisionTemplateSpec struct {
@@ -86,9 +89,11 @@ type ComplexityRoot struct {
 	}
 
 	TrafficTarget struct {
-		LatestRevision func(childComplexity int) int
-		Percent        func(childComplexity int) int
-		Tag            func(childComplexity int) int
+		ConfigurationName func(childComplexity int) int
+		LatestRevision    func(childComplexity int) int
+		Percent           func(childComplexity int) int
+		RevisionName      func(childComplexity int) int
+		Tag               func(childComplexity int) int
 	}
 }
 
@@ -139,6 +144,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Container.Name(childComplexity), true
 
+	case "Metadata.annotations":
+		if e.complexity.Metadata.Annotations == nil {
+			break
+		}
+
+		return e.complexity.Metadata.Annotations(childComplexity), true
+
 	case "Metadata.name":
 		if e.complexity.Metadata.Name == nil {
 			break
@@ -165,6 +177,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Services(childComplexity, args["namespace"].(string)), true
 
+	case "RevisionSpec.containerConcurrency":
+		if e.complexity.RevisionSpec.ContainerConcurrency == nil {
+			break
+		}
+
+		return e.complexity.RevisionSpec.ContainerConcurrency(childComplexity), true
+
 	case "RevisionSpec.containers":
 		if e.complexity.RevisionSpec.Containers == nil {
 			break
@@ -178,6 +197,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RevisionSpec.ServiceAccountName(childComplexity), true
+
+	case "RevisionSpec.timeoutSeconds":
+		if e.complexity.RevisionSpec.TimeoutSeconds == nil {
+			break
+		}
+
+		return e.complexity.RevisionSpec.TimeoutSeconds(childComplexity), true
 
 	case "RevisionTemplateSpec.metadata":
 		if e.complexity.RevisionTemplateSpec.Metadata == nil {
@@ -228,6 +254,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceSpec.Traffic(childComplexity), true
 
+	case "TrafficTarget.configurationName":
+		if e.complexity.TrafficTarget.ConfigurationName == nil {
+			break
+		}
+
+		return e.complexity.TrafficTarget.ConfigurationName(childComplexity), true
+
 	case "TrafficTarget.latestRevision":
 		if e.complexity.TrafficTarget.LatestRevision == nil {
 			break
@@ -241,6 +274,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TrafficTarget.Percent(childComplexity), true
+
+	case "TrafficTarget.revisionName":
+		if e.complexity.TrafficTarget.RevisionName == nil {
+			break
+		}
+
+		return e.complexity.TrafficTarget.RevisionName(childComplexity), true
 
 	case "TrafficTarget.tag":
 		if e.complexity.TrafficTarget.Tag == nil {
@@ -301,11 +341,14 @@ var parsedSchema = gqlparser.MustLoadSchema(
 	&ast.Source{Name: "schema.graphql", Input: `type Metadata {
   name: String!
   namespace: String!
+  annotations: StringMap
 }
 
 type RevisionSpec {
   containers: [Container!]!
   serviceAccountName: String
+  containerConcurrency: Int
+  timeoutSeconds: Int
 }
 
 type RouteSpec {
@@ -315,6 +358,8 @@ type RouteSpec {
 type TrafficTarget {
   tag: String
   percent: Int
+  revisionName: String
+  configurationName: String
   latestRevision: Boolean
 }
 
@@ -343,6 +388,8 @@ type Container {
 type Query {
   services(namespace: String!): [Service!]!
 }
+
+scalar StringMap
 `},
 )
 
@@ -627,6 +674,40 @@ func (ec *executionContext) _Metadata_namespace(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Metadata_annotations(ctx context.Context, field graphql.CollectedField, obj *v11.ObjectMeta) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Metadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Annotations, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(map[string]string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOStringMap2map(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_services(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -746,7 +827,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _RevisionSpec_containers(ctx context.Context, field graphql.CollectedField, obj *v1beta1.RevisionSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _RevisionSpec_containers(ctx context.Context, field graphql.CollectedField, obj *model.RevisionSpec) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -783,7 +864,7 @@ func (ec *executionContext) _RevisionSpec_containers(ctx context.Context, field 
 	return ec.marshalNContainer2ᚕk8sᚗioᚋapiᚋcoreᚋv1ᚐContainer(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _RevisionSpec_serviceAccountName(ctx context.Context, field graphql.CollectedField, obj *v1beta1.RevisionSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _RevisionSpec_serviceAccountName(ctx context.Context, field graphql.CollectedField, obj *model.RevisionSpec) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -815,6 +896,74 @@ func (ec *executionContext) _RevisionSpec_serviceAccountName(ctx context.Context
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RevisionSpec_containerConcurrency(ctx context.Context, field graphql.CollectedField, obj *model.RevisionSpec) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "RevisionSpec",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContainerConcurrency(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RevisionSpec_timeoutSeconds(ctx context.Context, field graphql.CollectedField, obj *model.RevisionSpec) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "RevisionSpec",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TimeoutSeconds, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int64)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOInt2ᚖint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _RevisionTemplateSpec_metadata(ctx context.Context, field graphql.CollectedField, obj *model.RevisionTemplateSpec) (ret graphql.Marshaler) {
@@ -879,10 +1028,10 @@ func (ec *executionContext) _RevisionTemplateSpec_spec(ctx context.Context, fiel
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(v1beta1.RevisionSpec)
+	res := resTmp.(*model.RevisionSpec)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalORevisionSpec2knativeᚗdevᚋservingᚋpkgᚋapisᚋservingᚋv1beta1ᚐRevisionSpec(ctx, field.Selections, res)
+	return ec.marshalORevisionSpec2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevisionSpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _RouteSpec_traffic(ctx context.Context, field graphql.CollectedField, obj *RouteSpec) (ret graphql.Marshaler) {
@@ -1127,6 +1276,74 @@ func (ec *executionContext) _TrafficTarget_percent(ctx context.Context, field gr
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TrafficTarget_revisionName(ctx context.Context, field graphql.CollectedField, obj *v1beta1.TrafficTarget) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TrafficTarget",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RevisionName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TrafficTarget_configurationName(ctx context.Context, field graphql.CollectedField, obj *v1beta1.TrafficTarget) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TrafficTarget",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ConfigurationName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TrafficTarget_latestRevision(ctx context.Context, field graphql.CollectedField, obj *v1beta1.TrafficTarget) (ret graphql.Marshaler) {
@@ -2376,6 +2593,8 @@ func (ec *executionContext) _Metadata(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "annotations":
+			out.Values[i] = ec._Metadata_annotations(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2433,7 +2652,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 
 var revisionSpecImplementors = []string{"RevisionSpec"}
 
-func (ec *executionContext) _RevisionSpec(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.RevisionSpec) graphql.Marshaler {
+func (ec *executionContext) _RevisionSpec(ctx context.Context, sel ast.SelectionSet, obj *model.RevisionSpec) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.RequestContext, sel, revisionSpecImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -2449,6 +2668,10 @@ func (ec *executionContext) _RevisionSpec(ctx context.Context, sel ast.Selection
 			}
 		case "serviceAccountName":
 			out.Values[i] = ec._RevisionSpec_serviceAccountName(ctx, field, obj)
+		case "containerConcurrency":
+			out.Values[i] = ec._RevisionSpec_containerConcurrency(ctx, field, obj)
+		case "timeoutSeconds":
+			out.Values[i] = ec._RevisionSpec_timeoutSeconds(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2583,6 +2806,10 @@ func (ec *executionContext) _TrafficTarget(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._TrafficTarget_tag(ctx, field, obj)
 		case "percent":
 			out.Values[i] = ec._TrafficTarget_percent(ctx, field, obj)
+		case "revisionName":
+			out.Values[i] = ec._TrafficTarget_revisionName(ctx, field, obj)
+		case "configurationName":
+			out.Values[i] = ec._TrafficTarget_configurationName(ctx, field, obj)
 		case "latestRevision":
 			out.Values[i] = ec._TrafficTarget_latestRevision(ctx, field, obj)
 		default:
@@ -3273,12 +3500,57 @@ func (ec *executionContext) marshalOInt2int(ctx context.Context, sel ast.Selecti
 	return graphql.MarshalInt(v)
 }
 
+func (ec *executionContext) unmarshalOInt2int64(ctx context.Context, v interface{}) (int64, error) {
+	return graphql.UnmarshalInt64(v)
+}
+
+func (ec *executionContext) marshalOInt2int64(ctx context.Context, sel ast.SelectionSet, v int64) graphql.Marshaler {
+	return graphql.MarshalInt64(v)
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOInt2int(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOInt2int(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint64(ctx context.Context, v interface{}) (*int64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOInt2int64(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOInt2ᚖint64(ctx context.Context, sel ast.SelectionSet, v *int64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOInt2int64(ctx, sel, *v)
+}
+
 func (ec *executionContext) marshalOMetadata2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx context.Context, sel ast.SelectionSet, v v11.ObjectMeta) graphql.Marshaler {
 	return ec._Metadata(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalORevisionSpec2knativeᚗdevᚋservingᚋpkgᚋapisᚋservingᚋv1beta1ᚐRevisionSpec(ctx context.Context, sel ast.SelectionSet, v v1beta1.RevisionSpec) graphql.Marshaler {
+func (ec *executionContext) marshalORevisionSpec2githubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevisionSpec(ctx context.Context, sel ast.SelectionSet, v model.RevisionSpec) graphql.Marshaler {
 	return ec._RevisionSpec(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalORevisionSpec2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevisionSpec(ctx context.Context, sel ast.SelectionSet, v *model.RevisionSpec) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._RevisionSpec(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalORevisionTemplateSpec2githubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevisionTemplateSpec(ctx context.Context, sel ast.SelectionSet, v model.RevisionTemplateSpec) graphql.Marshaler {
@@ -3356,6 +3628,20 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return ec.marshalOString2string(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalOStringMap2map(ctx context.Context, v interface{}) (map[string]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	return model.UnmarshalStringMap(v)
+}
+
+func (ec *executionContext) marshalOStringMap2map(ctx context.Context, sel ast.SelectionSet, v map[string]string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return model.MarshalStringMap(v)
 }
 
 func (ec *executionContext) marshalOTrafficTarget2ᚕknativeᚗdevᚋservingᚋpkgᚋapisᚋservingᚋv1beta1ᚐTrafficTarget(ctx context.Context, sel ast.SelectionSet, v []v1beta1.TrafficTarget) graphql.Marshaler {
