@@ -386,7 +386,7 @@ type Container {
 }
 
 type Query {
-  services(namespace: String!): [Service!]!
+  services(namespace: String! = "default"): [Service!]!
 }
 
 scalar StringMap
