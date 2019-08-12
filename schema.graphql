@@ -1,6 +1,7 @@
 type Metadata {
   name: String!
   namespace: String!
+  uid: ID!
   annotations: StringMap
 }
 
@@ -34,6 +35,7 @@ type ServiceSpec {
 }
 
 type Service {
+  id: ID!
   metadata: Metadata!
   spec: ServiceSpec
 }

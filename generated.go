@@ -16,7 +16,6 @@ import (
 	"github.com/vektah/gqlparser"
 	"github.com/vektah/gqlparser/ast"
 	"k8s.io/api/core/v1"
-	v11 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/serving/pkg/apis/serving/v1beta1"
 )
 
@@ -56,6 +55,7 @@ type ComplexityRoot struct {
 		Annotations func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Namespace   func(childComplexity int) int
+		UID         func(childComplexity int) int
 	}
 
 	Query struct {
@@ -80,6 +80,7 @@ type ComplexityRoot struct {
 	}
 
 	Service struct {
+		ID       func(childComplexity int) int
 		Metadata func(childComplexity int) int
 		Spec     func(childComplexity int) int
 	}
@@ -167,6 +168,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Metadata.Namespace(childComplexity), true
 
+	case "Metadata.uid":
+		if e.complexity.Metadata.UID == nil {
+			break
+		}
+
+		return e.complexity.Metadata.UID(childComplexity), true
+
 	case "Query.serviceByName":
 		if e.complexity.Query.ServiceByName == nil {
 			break
@@ -239,6 +247,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RouteSpec.Traffic(childComplexity), true
+
+	case "Service.id":
+		if e.complexity.Service.ID == nil {
+			break
+		}
+
+		return e.complexity.Service.ID(childComplexity), true
 
 	case "Service.metadata":
 		if e.complexity.Service.Metadata == nil {
@@ -355,6 +370,7 @@ var parsedSchema = gqlparser.MustLoadSchema(
 	&ast.Source{Name: "schema.graphql", Input: `type Metadata {
   name: String!
   namespace: String!
+  uid: ID!
   annotations: StringMap
 }
 
@@ -388,6 +404,7 @@ type ServiceSpec {
 }
 
 type Service {
+  id: ID!
   metadata: Metadata!
   spec: ServiceSpec
 }
@@ -637,7 +654,7 @@ func (ec *executionContext) _Container_image(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Metadata_name(ctx context.Context, field graphql.CollectedField, obj *v11.ObjectMeta) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_name(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -674,7 +691,7 @@ func (ec *executionContext) _Metadata_name(ctx context.Context, field graphql.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Metadata_namespace(ctx context.Context, field graphql.CollectedField, obj *v11.ObjectMeta) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_namespace(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -711,7 +728,44 @@ func (ec *executionContext) _Metadata_namespace(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Metadata_annotations(ctx context.Context, field graphql.CollectedField, obj *v11.ObjectMeta) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_uid(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Metadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UID(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Metadata_annotations(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -1072,10 +1126,10 @@ func (ec *executionContext) _RevisionTemplateSpec_metadata(ctx context.Context, 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(v11.ObjectMeta)
+	res := resTmp.(*model.Metadata)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOMetadata2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
+	return ec.marshalOMetadata2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _RevisionTemplateSpec_spec(ctx context.Context, field graphql.CollectedField, obj *model.RevisionTemplateSpec) (ret graphql.Marshaler) {
@@ -1149,6 +1203,43 @@ func (ec *executionContext) _RouteSpec_traffic(ctx context.Context, field graphq
 	return ec.marshalNTrafficTarget2ᚕᚖknativeᚗdevᚋservingᚋpkgᚋapisᚋservingᚋv1beta1ᚐTrafficTarget(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Service_id(ctx context.Context, field graphql.CollectedField, obj *model.Service) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Service",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Service_metadata(ctx context.Context, field graphql.CollectedField, obj *model.Service) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -1180,10 +1271,10 @@ func (ec *executionContext) _Service_metadata(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.(v11.ObjectMeta)
+	res := resTmp.(*model.Metadata)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMetadata2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Service_spec(ctx context.Context, field graphql.CollectedField, obj *model.Service) (ret graphql.Marshaler) {
@@ -2652,7 +2743,7 @@ func (ec *executionContext) _Container(ctx context.Context, sel ast.SelectionSet
 
 var metadataImplementors = []string{"Metadata"}
 
-func (ec *executionContext) _Metadata(ctx context.Context, sel ast.SelectionSet, obj *v11.ObjectMeta) graphql.Marshaler {
+func (ec *executionContext) _Metadata(ctx context.Context, sel ast.SelectionSet, obj *model.Metadata) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.RequestContext, sel, metadataImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -2668,6 +2759,11 @@ func (ec *executionContext) _Metadata(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "namespace":
 			out.Values[i] = ec._Metadata_namespace(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "uid":
+			out.Values[i] = ec._Metadata_uid(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2836,6 +2932,11 @@ func (ec *executionContext) _Service(ctx context.Context, sel ast.SelectionSet, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Service")
+		case "id":
+			out.Values[i] = ec._Service_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "metadata":
 			out.Values[i] = ec._Service_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3212,8 +3313,32 @@ func (ec *executionContext) marshalNContainer2ᚕk8sᚗioᚋapiᚋcoreᚋv1ᚐCo
 	return ret
 }
 
-func (ec *executionContext) marshalNMetadata2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx context.Context, sel ast.SelectionSet, v v11.ObjectMeta) graphql.Marshaler {
+func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
+	return graphql.UnmarshalID(v)
+}
+
+func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalID(v)
+	if res == graphql.Null {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) marshalNMetadata2githubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐMetadata(ctx context.Context, sel ast.SelectionSet, v model.Metadata) graphql.Marshaler {
 	return ec._Metadata(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMetadata2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐMetadata(ctx context.Context, sel ast.SelectionSet, v *model.Metadata) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Metadata(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNService2githubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐService(ctx context.Context, sel ast.SelectionSet, v model.Service) graphql.Marshaler {
@@ -3627,8 +3752,15 @@ func (ec *executionContext) marshalOInt2ᚖint64(ctx context.Context, sel ast.Se
 	return ec.marshalOInt2int64(ctx, sel, *v)
 }
 
-func (ec *executionContext) marshalOMetadata2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx context.Context, sel ast.SelectionSet, v v11.ObjectMeta) graphql.Marshaler {
+func (ec *executionContext) marshalOMetadata2githubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐMetadata(ctx context.Context, sel ast.SelectionSet, v model.Metadata) graphql.Marshaler {
 	return ec._Metadata(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOMetadata2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐMetadata(ctx context.Context, sel ast.SelectionSet, v *model.Metadata) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Metadata(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalORevisionSpec2githubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevisionSpec(ctx context.Context, sel ast.SelectionSet, v model.RevisionSpec) graphql.Marshaler {

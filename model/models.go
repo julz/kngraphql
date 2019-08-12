@@ -9,14 +9,20 @@ type Service struct {
 	v1beta1.Service
 }
 
-func (s *Service) Metadata() metav1.ObjectMeta {
-	return s.Service.ObjectMeta
+func (s *Service) Metadata() *Metadata {
+	return &Metadata{
+		ObjectMeta: s.Service.ObjectMeta,
+	}
 }
 
 func (s *Service) Spec() *ServiceSpec {
 	return &ServiceSpec{
 		ServiceSpec: s.Service.Spec,
 	}
+}
+
+func (s *Service) ID() string {
+	return string(s.ObjectMeta.UID)
 }
 
 type ServiceSpec struct {
@@ -31,8 +37,10 @@ type RevisionTemplateSpec struct {
 	v1beta1.RevisionTemplateSpec
 }
 
-func (s *RevisionTemplateSpec) Metadata() metav1.ObjectMeta {
-	return s.RevisionTemplateSpec.ObjectMeta
+func (s *RevisionTemplateSpec) Metadata() *Metadata {
+	return &Metadata{
+		ObjectMeta: s.RevisionTemplateSpec.ObjectMeta,
+	}
 }
 
 func (s *RevisionTemplateSpec) Spec() *RevisionSpec {
@@ -46,4 +54,12 @@ type RevisionSpec struct {
 func (r *RevisionSpec) ContainerConcurrency() *int {
 	c := int(r.RevisionSpec.ContainerConcurrency)
 	return &c
+}
+
+type Metadata struct {
+	metav1.ObjectMeta
+}
+
+func (m *Metadata) UID() string {
+	return string(m.ObjectMeta.UID)
 }

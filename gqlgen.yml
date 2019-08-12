@@ -10,8 +10,6 @@ exec:
 model:
   filename: models_gen.go
 models:
-  Metadata:
-    model: k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta
   ServiceSpec:
     model: github.com/julz/kngraphql/model.ServiceSpec
   RevisionTemplateSpec:
@@ -28,6 +26,8 @@ models:
     model: github.com/julz/kngraphql/model.Service
   StringMap:
     model: github.com/julz/kngraphql/model.StringMap
+  Metadata:
+    model: github.com/julz/kngraphql/model.Metadata
 resolver:
   filename: resolver.go
   type: Resolver
