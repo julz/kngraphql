@@ -83,11 +83,16 @@ type ComplexityRoot struct {
 		ID       func(childComplexity int) int
 		Metadata func(childComplexity int) int
 		Spec     func(childComplexity int) int
+		Status   func(childComplexity int) int
 	}
 
 	ServiceSpec struct {
 		Template func(childComplexity int) int
 		Traffic  func(childComplexity int) int
+	}
+
+	ServiceStatus struct {
+		Traffic func(childComplexity int) int
 	}
 
 	TrafficTarget struct {
@@ -269,6 +274,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Service.Spec(childComplexity), true
 
+	case "Service.status":
+		if e.complexity.Service.Status == nil {
+			break
+		}
+
+		return e.complexity.Service.Status(childComplexity), true
+
 	case "ServiceSpec.template":
 		if e.complexity.ServiceSpec.Template == nil {
 			break
@@ -282,6 +294,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ServiceSpec.Traffic(childComplexity), true
+
+	case "ServiceStatus.traffic":
+		if e.complexity.ServiceStatus.Traffic == nil {
+			break
+		}
+
+		return e.complexity.ServiceStatus.Traffic(childComplexity), true
 
 	case "TrafficTarget.configurationName":
 		if e.complexity.TrafficTarget.ConfigurationName == nil {
@@ -403,10 +422,15 @@ type ServiceSpec {
   traffic: [TrafficTarget!]
 }
 
+type ServiceStatus {
+  traffic: [TrafficTarget!]
+}
+
 type Service {
   id: ID!
   metadata: Metadata!
   spec: ServiceSpec
+  status: ServiceStatus
 }
 
 type Container {
@@ -1311,6 +1335,40 @@ func (ec *executionContext) _Service_spec(ctx context.Context, field graphql.Col
 	return ec.marshalOServiceSpec2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐServiceSpec(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Service_status(ctx context.Context, field graphql.CollectedField, obj *model.Service) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Service",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(v1beta1.ServiceStatus)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOServiceStatus2knativeᚗdevᚋservingᚋpkgᚋapisᚋservingᚋv1beta1ᚐServiceStatus(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ServiceSpec_template(ctx context.Context, field graphql.CollectedField, obj *model.ServiceSpec) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -1356,6 +1414,40 @@ func (ec *executionContext) _ServiceSpec_traffic(ctx context.Context, field grap
 	}()
 	rctx := &graphql.ResolverContext{
 		Object:   "ServiceSpec",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Traffic, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]v1beta1.TrafficTarget)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTrafficTarget2ᚕknativeᚗdevᚋservingᚋpkgᚋapisᚋservingᚋv1beta1ᚐTrafficTarget(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ServiceStatus_traffic(ctx context.Context, field graphql.CollectedField, obj *v1beta1.ServiceStatus) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "ServiceStatus",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -2944,6 +3036,8 @@ func (ec *executionContext) _Service(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "spec":
 			out.Values[i] = ec._Service_spec(ctx, field, obj)
+		case "status":
+			out.Values[i] = ec._Service_status(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2970,6 +3064,30 @@ func (ec *executionContext) _ServiceSpec(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._ServiceSpec_template(ctx, field, obj)
 		case "traffic":
 			out.Values[i] = ec._ServiceSpec_traffic(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var serviceStatusImplementors = []string{"ServiceStatus"}
+
+func (ec *executionContext) _ServiceStatus(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.ServiceStatus) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, serviceStatusImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ServiceStatus")
+		case "traffic":
+			out.Values[i] = ec._ServiceStatus_traffic(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3805,6 +3923,10 @@ func (ec *executionContext) marshalOServiceSpec2ᚖgithubᚗcomᚋjulzᚋkngraph
 		return graphql.Null
 	}
 	return ec._ServiceSpec(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOServiceStatus2knativeᚗdevᚋservingᚋpkgᚋapisᚋservingᚋv1beta1ᚐServiceStatus(ctx context.Context, sel ast.SelectionSet, v v1beta1.ServiceStatus) graphql.Marshaler {
+	return ec._ServiceStatus(ctx, sel, &v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

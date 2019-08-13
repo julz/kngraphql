@@ -34,10 +34,15 @@ type ServiceSpec {
   traffic: [TrafficTarget!]
 }
 
+type ServiceStatus {
+  traffic: [TrafficTarget!]
+}
+
 type Service {
   id: ID!
   metadata: Metadata!
   spec: ServiceSpec
+  status: ServiceStatus
 }
 
 type Container {
