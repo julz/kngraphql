@@ -5,6 +5,11 @@ type Metadata {
   annotations: StringMap
 }
 
+type Revision {
+  metadata: Metadata
+  spec: RevisionSpec
+}
+
 type RevisionSpec {
   containers: [Container!]!
   serviceAccountName: String
@@ -43,6 +48,7 @@ type Service {
   metadata: Metadata!
   spec: ServiceSpec
   status: ServiceStatus
+  revisions: [Revision!]!
 }
 
 type Container {

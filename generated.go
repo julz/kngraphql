@@ -38,6 +38,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Query() QueryResolver
+	Service() ServiceResolver
 }
 
 type DirectiveRoot struct {
@@ -63,6 +64,11 @@ type ComplexityRoot struct {
 		Services      func(childComplexity int, namespace string) int
 	}
 
+	Revision struct {
+		Metadata func(childComplexity int) int
+		Spec     func(childComplexity int) int
+	}
+
 	RevisionSpec struct {
 		ContainerConcurrency func(childComplexity int) int
 		Containers           func(childComplexity int) int
@@ -80,10 +86,11 @@ type ComplexityRoot struct {
 	}
 
 	Service struct {
-		ID       func(childComplexity int) int
-		Metadata func(childComplexity int) int
-		Spec     func(childComplexity int) int
-		Status   func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Metadata  func(childComplexity int) int
+		Revisions func(childComplexity int) int
+		Spec      func(childComplexity int) int
+		Status    func(childComplexity int) int
 	}
 
 	ServiceSpec struct {
@@ -107,6 +114,9 @@ type ComplexityRoot struct {
 type QueryResolver interface {
 	Services(ctx context.Context, namespace string) ([]*model.Service, error)
 	ServiceByName(ctx context.Context, namespace string, name string) (*model.Service, error)
+}
+type ServiceResolver interface {
+	Revisions(ctx context.Context, obj *model.Service) ([]*model.Revision, error)
 }
 
 type executableSchema struct {
@@ -204,6 +214,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Services(childComplexity, args["namespace"].(string)), true
 
+	case "Revision.metadata":
+		if e.complexity.Revision.Metadata == nil {
+			break
+		}
+
+		return e.complexity.Revision.Metadata(childComplexity), true
+
+	case "Revision.spec":
+		if e.complexity.Revision.Spec == nil {
+			break
+		}
+
+		return e.complexity.Revision.Spec(childComplexity), true
+
 	case "RevisionSpec.containerConcurrency":
 		if e.complexity.RevisionSpec.ContainerConcurrency == nil {
 			break
@@ -266,6 +290,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Service.Metadata(childComplexity), true
+
+	case "Service.revisions":
+		if e.complexity.Service.Revisions == nil {
+			break
+		}
+
+		return e.complexity.Service.Revisions(childComplexity), true
 
 	case "Service.spec":
 		if e.complexity.Service.Spec == nil {
@@ -393,6 +424,11 @@ var parsedSchema = gqlparser.MustLoadSchema(
   annotations: StringMap
 }
 
+type Revision {
+  metadata: Metadata
+  spec: RevisionSpec
+}
+
 type RevisionSpec {
   containers: [Container!]!
   serviceAccountName: String
@@ -431,6 +467,7 @@ type Service {
   metadata: Metadata!
   spec: ServiceSpec
   status: ServiceStatus
+  revisions: [Revision!]!
 }
 
 type Container {
@@ -983,6 +1020,74 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Revision_metadata(ctx context.Context, field graphql.CollectedField, obj *model.Revision) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Revision",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metadata(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Metadata)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOMetadata2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Revision_spec(ctx context.Context, field graphql.CollectedField, obj *model.Revision) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Revision",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Spec(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.RevisionSpec)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalORevisionSpec2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevisionSpec(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _RevisionSpec_containers(ctx context.Context, field graphql.CollectedField, obj *model.RevisionSpec) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -1367,6 +1472,43 @@ func (ec *executionContext) _Service_status(ctx context.Context, field graphql.C
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOServiceStatus2knativeᚗdevᚋservingᚋpkgᚋapisᚋservingᚋv1beta1ᚐServiceStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Service_revisions(ctx context.Context, field graphql.CollectedField, obj *model.Service) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Service",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Service().Revisions(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Revision)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNRevision2ᚕᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevision(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ServiceSpec_template(ctx context.Context, field graphql.CollectedField, obj *model.ServiceSpec) (ret graphql.Marshaler) {
@@ -2927,6 +3069,32 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
+var revisionImplementors = []string{"Revision"}
+
+func (ec *executionContext) _Revision(ctx context.Context, sel ast.SelectionSet, obj *model.Revision) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, revisionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Revision")
+		case "metadata":
+			out.Values[i] = ec._Revision_metadata(ctx, field, obj)
+		case "spec":
+			out.Values[i] = ec._Revision_spec(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var revisionSpecImplementors = []string{"RevisionSpec"}
 
 func (ec *executionContext) _RevisionSpec(ctx context.Context, sel ast.SelectionSet, obj *model.RevisionSpec) graphql.Marshaler {
@@ -3027,17 +3195,31 @@ func (ec *executionContext) _Service(ctx context.Context, sel ast.SelectionSet, 
 		case "id":
 			out.Values[i] = ec._Service_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "metadata":
 			out.Values[i] = ec._Service_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "spec":
 			out.Values[i] = ec._Service_spec(ctx, field, obj)
 		case "status":
 			out.Values[i] = ec._Service_status(ctx, field, obj)
+		case "revisions":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Service_revisions(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3457,6 +3639,57 @@ func (ec *executionContext) marshalNMetadata2ᚖgithubᚗcomᚋjulzᚋkngraphql�
 		return graphql.Null
 	}
 	return ec._Metadata(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRevision2githubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevision(ctx context.Context, sel ast.SelectionSet, v model.Revision) graphql.Marshaler {
+	return ec._Revision(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRevision2ᚕᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevision(ctx context.Context, sel ast.SelectionSet, v []*model.Revision) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRevision2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevision(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNRevision2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevision(ctx context.Context, sel ast.SelectionSet, v *model.Revision) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Revision(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNService2githubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐService(ctx context.Context, sel ast.SelectionSet, v model.Service) graphql.Marshaler {

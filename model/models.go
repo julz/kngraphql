@@ -63,3 +63,19 @@ type Metadata struct {
 func (m *Metadata) UID() string {
 	return string(m.ObjectMeta.UID)
 }
+
+type Revision struct {
+	v1beta1.Revision
+}
+
+func (s *Revision) Metadata() *Metadata {
+	return &Metadata{
+		ObjectMeta: s.Revision.ObjectMeta,
+	}
+}
+
+func (s *Revision) Spec() *RevisionSpec {
+	return &RevisionSpec{
+		RevisionSpec: s.Revision.Spec,
+	}
+}

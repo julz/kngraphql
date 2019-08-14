@@ -24,6 +24,10 @@ func (r *Resolver) Query() kngraphql.QueryResolver {
 	return r
 }
 
+func (r *Resolver) Service() kngraphql.ServiceResolver {
+	return r
+}
+
 func (r *Resolver) Services(ctx context.Context, namespace string) (result []*model.Service, err error) {
 	ss, err := r.client.ServingV1beta1().Services(namespace).List(v1.ListOptions{})
 	if err != nil {
@@ -46,4 +50,20 @@ func (r *Resolver) ServiceByName(ctx context.Context, namespace string, name str
 	return &model.Service{
 		Service: *s,
 	}, nil
+}
+
+func (r *Resolver) Revisions(ctx context.Context, service *model.Service) (result []*model.Revision, err error) {
+	ss, err := r.client.ServingV1beta1().Revisions(service.Service.ObjectMeta.Namespace).List(v1.ListOptions{
+		LabelSelector: fmt.Sprintf("serving.knative.dev/service=%s", service.Name),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, s := range ss.Items {
+		result = append(result, &model.Revision{Revision: s})
+	}
+
+	return result, nil
 }
