@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/julz/kngraphql/model"
+	"knative.dev/serving/pkg/apis/serving/v1beta1"
 )
 
 // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
@@ -15,6 +16,9 @@ func (r *Resolver) Query() QueryResolver {
 }
 func (r *Resolver) Service() ServiceResolver {
 	return &serviceResolver{r}
+}
+func (r *Resolver) TrafficTarget() TrafficTargetResolver {
+	return &trafficTargetResolver{r}
 }
 
 type queryResolver struct{ *Resolver }
@@ -29,5 +33,11 @@ func (r *queryResolver) ServiceByName(ctx context.Context, namespace string, nam
 type serviceResolver struct{ *Resolver }
 
 func (r *serviceResolver) Revisions(ctx context.Context, obj *model.Service) ([]*model.Revision, error) {
+	panic("not implemented")
+}
+
+type trafficTargetResolver struct{ *Resolver }
+
+func (r *trafficTargetResolver) Revision(ctx context.Context, obj *v1beta1.TrafficTarget) (*model.Revision, error) {
 	panic("not implemented")
 }

@@ -10,29 +10,18 @@ exec:
 model:
   filename: models_gen.go
 models:
-  ServiceSpec:
-    model: github.com/julz/kngraphql/model.ServiceSpec
-  RevisionTemplateSpec:
-    model: github.com/julz/kngraphql/model.RevisionTemplateSpec
   Template:
     model: knative.dev/serving/pkg/apis/serving/v1beta1.RevisionSpec
   TrafficTarget:
     model: knative.dev/serving/pkg/apis/serving/v1beta1.TrafficTarget
-  RevisionSpec:
-    model: github.com/julz/kngraphql/model.RevisionSpec
   Container:
     model: 	k8s.io/api/core/v1.Container
-  Revision:
-    model: github.com/julz/kngraphql/model.Revision
-  Service:
-    model: github.com/julz/kngraphql/model.Service
   ServiceStatus:
     model: knative.dev/serving/pkg/apis/serving/v1beta1.ServiceStatus
   StringMap:
     model: github.com/julz/kngraphql/model.StringMap
-  Metadata:
-    model: github.com/julz/kngraphql/model.Metadata
 resolver:
   filename: resolver.go
   type: Resolver
-autobind: []
+autobind:
+ - github.com/julz/kngraphql/model

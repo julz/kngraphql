@@ -39,6 +39,7 @@ type Config struct {
 type ResolverRoot interface {
 	Query() QueryResolver
 	Service() ServiceResolver
+	TrafficTarget() TrafficTargetResolver
 }
 
 type DirectiveRoot struct {
@@ -106,6 +107,7 @@ type ComplexityRoot struct {
 		ConfigurationName func(childComplexity int) int
 		LatestRevision    func(childComplexity int) int
 		Percent           func(childComplexity int) int
+		Revision          func(childComplexity int) int
 		RevisionName      func(childComplexity int) int
 		Tag               func(childComplexity int) int
 	}
@@ -117,6 +119,9 @@ type QueryResolver interface {
 }
 type ServiceResolver interface {
 	Revisions(ctx context.Context, obj *model.Service) ([]*model.Revision, error)
+}
+type TrafficTargetResolver interface {
+	Revision(ctx context.Context, obj *v1beta1.TrafficTarget) (*model.Revision, error)
 }
 
 type executableSchema struct {
@@ -354,6 +359,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TrafficTarget.Percent(childComplexity), true
 
+	case "TrafficTarget.revision":
+		if e.complexity.TrafficTarget.Revision == nil {
+			break
+		}
+
+		return e.complexity.TrafficTarget.Revision(childComplexity), true
+
 	case "TrafficTarget.revisionName":
 		if e.complexity.TrafficTarget.RevisionName == nil {
 			break
@@ -443,6 +455,7 @@ type RouteSpec {
 type TrafficTarget {
   tag: String
   percent: Int
+  revision: Revision
   revisionName: String
   configurationName: String
   latestRevision: Boolean
@@ -1679,6 +1692,40 @@ func (ec *executionContext) _TrafficTarget_percent(ctx context.Context, field gr
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TrafficTarget_revision(ctx context.Context, field graphql.CollectedField, obj *v1beta1.TrafficTarget) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TrafficTarget",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.TrafficTarget().Revision(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Revision)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalORevision2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevision(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TrafficTarget_revisionName(ctx context.Context, field graphql.CollectedField, obj *v1beta1.TrafficTarget) (ret graphql.Marshaler) {
@@ -3296,6 +3343,17 @@ func (ec *executionContext) _TrafficTarget(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._TrafficTarget_tag(ctx, field, obj)
 		case "percent":
 			out.Values[i] = ec._TrafficTarget_percent(ctx, field, obj)
+		case "revision":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._TrafficTarget_revision(ctx, field, obj)
+				return res
+			})
 		case "revisionName":
 			out.Values[i] = ec._TrafficTarget_revisionName(ctx, field, obj)
 		case "configurationName":
@@ -4112,6 +4170,17 @@ func (ec *executionContext) marshalOMetadata2ᚖgithubᚗcomᚋjulzᚋkngraphql�
 		return graphql.Null
 	}
 	return ec._Metadata(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalORevision2githubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevision(ctx context.Context, sel ast.SelectionSet, v model.Revision) graphql.Marshaler {
+	return ec._Revision(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalORevision2ᚖgithubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevision(ctx context.Context, sel ast.SelectionSet, v *model.Revision) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Revision(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalORevisionSpec2githubᚗcomᚋjulzᚋkngraphqlᚋmodelᚐRevisionSpec(ctx context.Context, sel ast.SelectionSet, v model.RevisionSpec) graphql.Marshaler {

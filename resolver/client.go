@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/julz/kngraphql"
 	"github.com/julz/kngraphql/model"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/serving/pkg/apis/serving/v1beta1"
 	"knative.dev/serving/pkg/client/clientset/versioned"
 )
 
@@ -26,6 +28,10 @@ func (r *Resolver) Query() kngraphql.QueryResolver {
 
 func (r *Resolver) Service() kngraphql.ServiceResolver {
 	return r
+}
+
+func (r *Resolver) TrafficTarget() kngraphql.TrafficTargetResolver {
+	return &trafficTargetResolver{r}
 }
 
 func (r *Resolver) Services(ctx context.Context, namespace string) (result []*model.Service, err error) {
@@ -66,4 +72,25 @@ func (r *Resolver) Revisions(ctx context.Context, service *model.Service) (resul
 	}
 
 	return result, nil
+}
+
+type trafficTargetResolver struct{ *Resolver }
+
+func (r *trafficTargetResolver) Revision(ctx context.Context, target *v1beta1.TrafficTarget) (*model.Revision, error) {
+	if target.RevisionName == "" {
+		return nil, nil
+	}
+
+	revision, err := r.Resolver.client.ServingV1beta1().Revisions(queryArg(ctx, "namespace").(string)).Get(target.RevisionName, v1.GetOptions{})
+	return &model.Revision{Revision: *revision}, err
+}
+
+func queryArg(ctx context.Context, key string) interface{} {
+	req := graphql.GetResolverContext(ctx)
+	var args map[string]interface{}
+	for parentCtx := req.Parent; parentCtx.Parent != nil; parentCtx = parentCtx.Parent {
+		args = parentCtx.Args
+	}
+
+	return args[key]
 }

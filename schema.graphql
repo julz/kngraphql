@@ -24,6 +24,7 @@ type RouteSpec {
 type TrafficTarget {
   tag: String
   percent: Int
+  revision: Revision
   revisionName: String
   configurationName: String
   latestRevision: Boolean
