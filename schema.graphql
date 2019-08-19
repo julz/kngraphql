@@ -59,9 +59,25 @@ type Container {
   image: String!
 }
 
+input ContainerInput {
+  name: String
+  args: [String!]
+  command: [String!]
+  image: String!
+}
+
+input CreateServiceInput {
+  name: String!
+  containers: [ContainerInput!]!
+}
+
 type Query {
   services(namespace: String! = "default"): [Service!]!
   serviceByName(namespace: String! = "default", name: String!): Service
+}
+
+type Mutation {
+  createService(namespace: String! = "default", input: CreateServiceInput): Service!
 }
 
 scalar StringMap

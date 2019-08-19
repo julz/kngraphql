@@ -6,6 +6,18 @@ import (
 	"knative.dev/serving/pkg/apis/serving/v1beta1"
 )
 
+type ContainerInput struct {
+	Name    *string  `json:"name"`
+	Args    []string `json:"args"`
+	Command []string `json:"command"`
+	Image   string   `json:"image"`
+}
+
+type CreateServiceInput struct {
+	Name       string            `json:"name"`
+	Containers []*ContainerInput `json:"containers"`
+}
+
 type RouteSpec struct {
 	Traffic []*v1beta1.TrafficTarget `json:"traffic"`
 }

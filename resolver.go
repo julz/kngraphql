@@ -11,6 +11,9 @@ import (
 
 type Resolver struct{}
 
+func (r *Resolver) Mutation() MutationResolver {
+	return &mutationResolver{r}
+}
 func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
 }
@@ -19,6 +22,12 @@ func (r *Resolver) Service() ServiceResolver {
 }
 func (r *Resolver) TrafficTarget() TrafficTargetResolver {
 	return &trafficTargetResolver{r}
+}
+
+type mutationResolver struct{ *Resolver }
+
+func (r *mutationResolver) CreateService(ctx context.Context, namespace string, input *CreateServiceInput) (*model.Service, error) {
+	panic("not implemented")
 }
 
 type queryResolver struct{ *Resolver }
